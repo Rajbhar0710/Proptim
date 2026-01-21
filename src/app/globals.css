@@ -1,26 +1,258 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Brand Colors */
+  --proptim-blue: #0077B5;
+  --proptim-blue-dark: #005a8c;
+  --proptim-blue-light: #8ED1FC;
+  --proptim-blue-pale: #E8F4FC;
+  --proptim-navy: #1a3a52;
+
+  /* Neutrals */
+  --white: #ffffff;
+  --off-white: #f8fafb;
+  --gray-50: #f4f6f7;
+  --gray-100: #e8ebed;
+  --gray-200: #d1d5d8;
+  --gray-300: #9ca3a9;
+  --gray-400: #6b7280;
+  --gray-500: #4b5563;
+  --gray-600: #374151;
+  --gray-700: #1f2937;
+  --gray-800: #111827;
+
+  /* Fonts */
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.08), 0 8px 10px -6px rgb(0 0 0 / 0.08);
+  --shadow-card: 0 0 0 1px rgb(0 119 181 / 0.05), 0 10px 40px -10px rgb(0 119 181 / 0.12);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-proptim-blue: var(--proptim-blue);
+  --color-proptim-blue-dark: var(--proptim-blue-dark);
+  --color-proptim-blue-light: var(--proptim-blue-light);
+  --color-proptim-blue-pale: var(--proptim-blue-pale);
+  --color-proptim-navy: var(--proptim-navy);
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body), system-ui, sans-serif;
+  background: var(--white);
+  color: var(--gray-700);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--gray-800);
+}
+
+/* Blueprint Grid Pattern */
+.blueprint-pattern {
+  background-image:
+    linear-gradient(to right, rgba(0, 119, 181, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 119, 181, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.blueprint-pattern-dense {
+  background-image:
+    linear-gradient(to right, rgba(0, 119, 181, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 119, 181, 0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Gradient Overlays */
+.gradient-fade-bottom {
+  background: linear-gradient(to bottom, transparent 0%, var(--white) 100%);
+}
+
+.gradient-fade-top {
+  background: linear-gradient(to top, transparent 0%, var(--white) 100%);
+}
+
+/* Geometric decoration */
+.geometric-circle {
+  position: absolute;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--proptim-blue-light) 0%, var(--proptim-blue-pale) 100%);
+  opacity: 0.6;
+}
+
+/* Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 0.8; }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.8s ease-out forwards;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.8s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.6s ease-out forwards;
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 4s ease-in-out infinite;
+}
+
+/* Stagger delays */
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+.delay-600 { animation-delay: 600ms; }
+.delay-700 { animation-delay: 700ms; }
+.delay-800 { animation-delay: 800ms; }
+
+/* Card styles */
+.card-elevated {
+  background: var(--white);
+  border: 1px solid var(--gray-100);
+  border-radius: 16px;
+  box-shadow: var(--shadow-card);
+  transition: all 0.3s ease;
+}
+
+.card-elevated:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 0 0 1px rgb(0 119 181 / 0.1), 0 20px 50px -15px rgb(0 119 181 / 0.18);
+}
+
+/* Section styles */
+.section-padding {
+  padding: 100px 0;
+}
+
+@media (max-width: 768px) {
+  .section-padding {
+    padding: 60px 0;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--gray-50);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--proptim-blue-light);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--proptim-blue);
+}
+
+/* Selection */
+::selection {
+  background: var(--proptim-blue);
+  color: var(--white);
+}
+
+/* Focus styles */
+*:focus-visible {
+  outline: 2px solid var(--proptim-blue);
+  outline-offset: 2px;
+}
+
+/* Smooth transitions for interactive elements */
+a, button {
+  transition: all 0.2s ease;
 }
