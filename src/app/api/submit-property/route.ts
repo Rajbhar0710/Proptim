@@ -3,6 +3,11 @@ import { supabase, PropertySubmission } from "@/lib/supabase";
 import { generatePropertyPDF } from "@/lib/pdf-generator";
 import { sendPropertySubmissionEmail } from "@/lib/email";
 
+// Configure route segment for file uploads
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const maxDuration = 60; // 60 seconds timeout
+
 // Helper function to upload file to Supabase Storage
 async function uploadToStorage(file: File, folder: string): Promise<string | null> {
   try {
