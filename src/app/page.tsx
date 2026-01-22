@@ -22,6 +22,7 @@ function Navigation() {
     { href: "#edge", label: "Why Us" },
     { href: "#clients", label: "Clients" },
     { href: "#contact", label: "Contact" },
+    { href: "/propose-property", label: "Propose Property" },
   ];
 
   return (
@@ -217,10 +218,23 @@ function HeroSection() {
             </svg>
           </a>
           <a
-            href="#about"
+            href="/propose-property"
             className="inline-flex items-center justify-center gap-2 bg-white text-gray-700 px-8 py-4 rounded-full text-lg font-medium border border-gray-200 hover:border-[#0077B5] hover:text-[#0077B5] transition-all"
           >
-            Learn More
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            Propose Property
           </a>
         </div>
 
