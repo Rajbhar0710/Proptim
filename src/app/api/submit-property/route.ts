@@ -84,26 +84,45 @@ export async function POST(request: NextRequest) {
       owner_contact: formData.get("Owner Contact") as string || undefined,
     };
 
-    // Handle file uploads - upload to Supabase Storage and get URLs
-    const picturesFiles = formData.getAll("Pictures") as File[];
-    const videoFile = formData.get("Video") as File | null;
+    // Handle media - check for direct upload URLs first, then fall back to file upload
+    const pictureUrlsJson = formData.get("PictureUrls") as string | null;
+    const videoUrlDirect = formData.get("VideoUrl") as string | null;
 
-    // Upload pictures and collect URLs
-    const pictureUrls: string[] = [];
-    for (const file of picturesFiles) {
-      if (file && file.size > 0) {
-        const url = await uploadToStorage(file, 'pictures');
-        if (url) pictureUrls.push(url);
+    // If URLs were provided (direct upload from client), use them
+    if (pictureUrlsJson) {
+      try {
+        const urls = JSON.parse(pictureUrlsJson);
+        if (Array.isArray(urls) && urls.length > 0) {
+          propertyData.pictures = urls;
+        }
+      } catch (e) {
+        console.error("Error parsing picture URLs:", e);
+      }
+    } else {
+      // Fall back to server-side upload for backward compatibility
+      const picturesFiles = formData.getAll("Pictures") as File[];
+      const pictureUrls: string[] = [];
+      for (const file of picturesFiles) {
+        if (file && file.size > 0) {
+          const url = await uploadToStorage(file, 'pictures');
+          if (url) pictureUrls.push(url);
+        }
+      }
+      if (pictureUrls.length > 0) {
+        propertyData.pictures = pictureUrls;
       }
     }
-    if (pictureUrls.length > 0) {
-      propertyData.pictures = pictureUrls;
-    }
 
-    // Upload video and get URL
-    if (videoFile && videoFile.size > 0) {
-      const videoUrl = await uploadToStorage(videoFile, 'videos');
-      if (videoUrl) propertyData.video = videoUrl;
+    // Handle video URL
+    if (videoUrlDirect) {
+      propertyData.video = videoUrlDirect;
+    } else {
+      // Fall back to server-side upload for backward compatibility
+      const videoFile = formData.get("Video") as File | null;
+      if (videoFile && videoFile.size > 0) {
+        const videoUrl = await uploadToStorage(videoFile, 'videos');
+        if (videoUrl) propertyData.video = videoUrl;
+      }
     }
 
     console.log("Processing property submission:", propertyData.city, propertyData.state);

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useRef } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { uploadFileToStorage, uploadFilesToStorage } from "@/lib/supabase-client";
 
 
 // Logo Component
@@ -252,15 +253,70 @@ function SuccessMessage() {
 export default function ProposePropertyPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<string>("");
+
+  // Refs to store selected files
+  const picturesRef = useRef<File[]>([]);
+  const videoRef = useRef<File | null>(null);
+
+  const handlePicturesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      picturesRef.current = Array.from(e.target.files);
+    }
+  };
+
+  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      videoRef.current = e.target.files[0];
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const form = e.currentTarget; // Store reference before async operation
+    const form = e.currentTarget;
     setIsSubmitting(true);
     setSubmitStatus(null);
+    setUploadProgress("");
 
     try {
+      // Upload files directly to Supabase Storage first
+      let pictureUrls: string[] = [];
+      let videoUrl: string | null = null;
+
+      // Upload pictures
+      if (picturesRef.current.length > 0) {
+        setUploadProgress("Uploading pictures...");
+        pictureUrls = await uploadFilesToStorage(
+          picturesRef.current,
+          "pictures",
+          (uploaded, total) => {
+            setUploadProgress(`Uploading pictures (${uploaded}/${total})...`);
+          }
+        );
+      }
+
+      // Upload video
+      if (videoRef.current) {
+        setUploadProgress("Uploading video...");
+        videoUrl = await uploadFileToStorage(videoRef.current, "videos");
+      }
+
+      setUploadProgress("Submitting form...");
+
+      // Create form data without files (send URLs instead)
       const formData = new FormData(form);
+
+      // Remove file inputs from formData
+      formData.delete("Pictures");
+      formData.delete("Video");
+
+      // Add URLs instead
+      if (pictureUrls.length > 0) {
+        formData.append("PictureUrls", JSON.stringify(pictureUrls));
+      }
+      if (videoUrl) {
+        formData.append("VideoUrl", videoUrl);
+      }
 
       const response = await fetch("/api/submit-property", {
         method: "POST",
@@ -271,8 +327,10 @@ export default function ProposePropertyPage() {
 
       if (result.success) {
         setSubmitStatus({ type: "success", message: result.message });
-        // Reset form
+        // Reset form and file refs
         form.reset();
+        picturesRef.current = [];
+        videoRef.current = null;
         // Scroll to top to show success message
         window.scrollTo({ top: 0, behavior: "smooth" });
       } else {
@@ -286,6 +344,7 @@ export default function ProposePropertyPage() {
       });
     } finally {
       setIsSubmitting(false);
+      setUploadProgress("");
     }
   };
 
@@ -516,6 +575,7 @@ export default function ProposePropertyPage() {
                     type="file"
                     accept="image/*"
                     multiple
+                    onChange={handlePicturesChange}
                     className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#0077B5] focus:ring-2 focus:ring-[#0077B5]/20 outline-none transition-all file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-[#0077B5]/10 file:text-[#0077B5] hover:file:bg-[#0077B5]/20"
                   />
                 </div>
@@ -531,10 +591,11 @@ export default function ProposePropertyPage() {
                     name="Video"
                     type="file"
                     accept="video/*"
+                    onChange={handleVideoChange}
                     className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#0077B5] focus:ring-2 focus:ring-[#0077B5]/20 outline-none transition-all file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-[#0077B5]/10 file:text-[#0077B5] hover:file:bg-[#0077B5]/20"
                   />
                 </div>
-                <p className="text-xs text-gray-500 mt-1">Upload a 360-degree video tour of the property (optional, max 25MB)</p>
+                <p className="text-xs text-gray-500 mt-1">Upload a 360-degree video tour of the property (optional, max 50MB)</p>
               </div>
             </div>
           </div>
@@ -644,7 +705,7 @@ export default function ProposePropertyPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Submitting...
+                  {uploadProgress || "Submitting..."}
                 </>
               ) : (
                 <>
