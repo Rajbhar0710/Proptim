@@ -116,12 +116,15 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (dbError) {
-      console.error("Database error:", dbError);
+      console.error("Database error:", JSON.stringify(dbError, null, 2));
       return NextResponse.json(
         {
           success: false,
-          message: "Failed to save submission to database. Please try again.",
+          message: `Failed to save submission to database. Please try again.`,
           error: dbError.message,
+          code: dbError.code,
+          details: dbError.details,
+          hint: dbError.hint,
         },
         { status: 500 }
       );
