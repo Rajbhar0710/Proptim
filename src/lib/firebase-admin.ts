@@ -1,9 +1,29 @@
-import { createClient } from "@supabase/supabase-js";
+import { initializeApp, getApps, cert, App } from "firebase-admin/app";
+import { getFirestore, Firestore } from "firebase-admin/firestore";
+import { getStorage } from "firebase-admin/storage";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+function getAdminApp(): App {
+  if (getApps().length) return getApps()[0];
+  return initializeApp({
+    credential: cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      // Vercel stores the key with literal "\n" — convert back to real newlines
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+    }),
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  });
+}
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export function getDb(): Firestore {
+  const db = getFirestore(getAdminApp());
+  db.settings({ ignoreUndefinedProperties: true });
+  return db;
+}
+
+export function getBucket() {
+  return getStorage(getAdminApp()).bucket();
+}
 
 // Types for property submission
 export interface PropertySubmission {

@@ -1,7 +1,9 @@
 import { Resend } from "resend";
-import { PropertySubmission } from "./supabase";
+import { PropertySubmission } from "./firebase-admin";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Use a placeholder if the key is missing so module construction never throws at build time.
+// Sending will simply fail gracefully (handled by the API route) until a real key is set.
+const resend = new Resend(process.env.RESEND_API_KEY || "re_placeholder");
 
 export async function sendPropertySubmissionEmail(
   data: PropertySubmission,

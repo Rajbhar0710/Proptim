@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase, PropertySubmission } from "@/lib/supabase";
+import { getDb, getBucket, PropertySubmission } from "@/lib/firebase-admin";
+import { FieldValue } from "firebase-admin/firestore";
 import { generatePropertyPDF } from "@/lib/pdf-generator";
 import { sendPropertySubmissionEmail } from "@/lib/email";
 
@@ -8,7 +9,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60; // 60 seconds timeout
 
-// Helper function to upload file to Supabase Storage
+// Helper function to upload file to Cloud Storage (server-side)
 async function uploadToStorage(file: File, folder: string): Promise<string | null> {
   try {
     const timestamp = Date.now();
@@ -18,24 +19,11 @@ async function uploadToStorage(file: File, folder: string): Promise<string | nul
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const { data, error } = await supabase.storage
-      .from('property-files')
-      .upload(filePath, buffer, {
-        contentType: file.type,
-        upsert: false
-      });
+    const blob = getBucket().file(filePath);
+    await blob.save(buffer, { contentType: file.type });
+    await blob.makePublic();
 
-    if (error) {
-      console.error('Storage upload error:', error);
-      return null;
-    }
-
-    // Get public URL
-    const { data: urlData } = supabase.storage
-      .from('property-files')
-      .getPublicUrl(filePath);
-
-    return urlData.publicUrl;
+    return `https://storage.googleapis.com/${blob.bucket.name}/${filePath}`;
   } catch (err) {
     console.error('File upload error:', err);
     return null;
@@ -127,29 +115,28 @@ export async function POST(request: NextRequest) {
 
     console.log("Processing property submission:", propertyData.city, propertyData.state);
 
-    // 1. Save to Supabase database
-    const { data: dbData, error: dbError } = await supabase
-      .from("property_submissions")
-      .insert([propertyData])
-      .select()
-      .single();
-
-    if (dbError) {
-      console.error("Database error:", JSON.stringify(dbError, null, 2));
+    // 1. Save to Firestore
+    let docId: string;
+    try {
+      const docRef = await getDb().collection("property_submissions").add({
+        ...propertyData,
+        status: propertyData.status ?? "pending",
+        created_at: FieldValue.serverTimestamp(),
+      });
+      docId = docRef.id;
+    } catch (dbError) {
+      console.error("Database error:", dbError);
       return NextResponse.json(
         {
           success: false,
           message: `Failed to save submission to database. Please try again.`,
-          error: dbError.message,
-          code: dbError.code,
-          details: dbError.details,
-          hint: dbError.hint,
+          error: String(dbError),
         },
         { status: 500 }
       );
     }
 
-    console.log("Saved to database with ID:", dbData.id);
+    console.log("Saved to Firestore with ID:", docId);
 
     // 2. Generate PDF
     let pdfBuffer: Buffer;
@@ -162,7 +149,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         message: "Property saved to database! PDF generation failed, but your submission was recorded.",
-        data: { id: dbData.id },
+        data: { id: docId },
       });
     }
 
@@ -175,7 +162,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         message: "Property saved successfully! Email notification could not be sent, but your submission was recorded.",
-        data: { id: dbData.id },
+        data: { id: docId },
       });
     }
 
@@ -184,7 +171,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: "Property submitted successfully! We will review your submission and get back to you soon.",
-      data: { id: dbData.id },
+      data: { id: docId },
     });
 
   } catch (error) {

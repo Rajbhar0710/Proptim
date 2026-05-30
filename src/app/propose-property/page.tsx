@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense, useRef } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { uploadFileToStorage, uploadFilesToStorage } from "@/lib/supabase-client";
+import { uploadFileToStorage, uploadFilesToStorage } from "@/lib/firebase-client";
 
 
 // Logo Component

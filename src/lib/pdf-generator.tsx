@@ -1,6 +1,6 @@
 import React from "react";
 import { Document, Page, Text, View, StyleSheet, renderToBuffer, Link } from "@react-pdf/renderer";
-import { PropertySubmission } from "./supabase";
+import { PropertySubmission } from "./firebase-admin";
 
 // Define styles for the PDF
 const styles = StyleSheet.create({
